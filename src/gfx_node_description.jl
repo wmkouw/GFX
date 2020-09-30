@@ -2,8 +2,7 @@ using ForneyLab
 using LinearAlgebra
 import ForneyLab: SoftFactor, @ensureVariables, generateId, addNode!, associate!,
                   averageEnergy, differentialEntropy, Interface, Variable, slug, ProbabilityDistribution,
-				  unsafeLogMean, unsafeMean, unsafeCov, unsafePrecision, unsafeMeanCov,
-				  ultimatePartner, posteriorFactor, assembleClamp!
+				  unsafeLogMean, unsafeMean, unsafeCov, unsafePrecision, unsafeMeanCov, cholinv
 export GeneralisedFilterX, GFX
 
 """
