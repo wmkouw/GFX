@@ -1,0 +1,13 @@
+name = "GFX"
+uuid = "65bb6014-af4f-4359-bfe9-dc7ee7256e7a"
+authors = ["wmkouw <wmkouw@gmail.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1.5"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
