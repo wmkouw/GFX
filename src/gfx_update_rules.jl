@@ -26,25 +26,23 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 	mu = unsafeMean(marg_u)
 	mτ = unsafeMean(marg_τ)
 
-	# Set order
+	# Set order of system
 	order = dims(marg_θ)
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order)
+	mW = wMatrix(mτ, order, Δt=Δt)
 
 	# Compute expected values
 	EA = S + s*mθ'
-	EB = s*mη
+	EB = s*mη	
 
 	# Set parameters
 	ϕ = EA*mx + EB*mu
 	Φ = mW
-	
-	# println("mz_t = "*string(inv(Φ)*ϕ))
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianMeanPrecision, m=ϕ, w=Φ)
@@ -70,16 +68,19 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order)
+	mW = wMatrix(mτ, order, Δt=Δt)
+	
+	# Compute expected values
+	B = zeros(order,); B[end] = Δt
+	EB = B*mη	
 
 	# Set parameters
-	ϕ = mx*s'*mW*(my - s*mη*mu) - mx'*S'*mW*s*mx - Vx*S'*mW*s
-	Φ = mx*s'*mW*s*mx' + Vx*(s'*mW*s)
-
-	# println("mθ = "*string(inv(Φ)*ϕ))
+	ϕ = mx*s'*mW*(my - EB*mu) - (mx*mx' + Vx)*S'*mW*s
+	# Φ = mx*s'*mW*s*mx' + Vx*(s'*mW*s)
+	Φ = (s'*s)*mW*(mx*mx' + Vx)
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -105,10 +106,10 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order)
+	mW = wMatrix(mτ, order, Δt=Δt)
 	
 	# Compute expected values
 	EA = S + s*mθ'
@@ -117,8 +118,6 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 	ϕ = EA*mW*(my - s*mη*mu)
 	Φ = EA'*mW*EA + mW*Vθ
 	# Φ = mW*(EA'*EA + Vθ)
-
-	# println("mz_tmin1 = "*string(inv(Φ)*ϕ))
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -133,8 +132,8 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
                                      marg_τ :: ProbabilityDistribution{Univariate})
 
 	# Extract moments of beliefs
-	my,Vy = unsafeMeanCov(marg_y)
-	mθ,Vθ = unsafeMeanCov(marg_θ)
+	my = unsafeMean(marg_y)
+	mθ = unsafeMean(marg_θ)
 	mx = unsafeMean(marg_x)
 	mu,Vu = unsafeMeanCov(marg_u)
 	mτ = unsafeMean(marg_τ)
@@ -144,19 +143,17 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 
 	# Compute expected values
 	EA = S + s*mθ'
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order)
+	mW = wMatrix(mτ, order, Δt=Δt)
 
 	# Set parameters
 	ϕ = mu'*s'*mW*(my - EA*mx)
 	Φ = mτ*(mu*mu' + Vu)
-
-	# println("mη = "*string(inv(Φ)*ϕ))
 
 	# Set outgoing message
 	return Message(Univariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -183,10 +180,10 @@ function ruleVariationalGFXIn4PPPPNP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order)
+	mW = wMatrix(mτ, order, Δt=Δt)
 	
 	# Compute expected values
 	EA = S + s*mθ'
@@ -220,7 +217,7 @@ function ruleVariationalGFXIn5PPPPPN(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = 1. *Δt
+	s = zeros(order,); s[end] = -Δt
 	
 	# Compute expected values
 	EA = S + s*mθ'
@@ -239,8 +236,6 @@ function ruleVariationalGFXIn5PPPPPN(Δt :: Float64,
 	# Set parameters
 	a = 3/2
 	b = t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9
-
-	# println("mγ = "*string(a/b))
 
 	# Set outgoing message
 	return Message(Univariate, Gamma, a=a, b=b)
