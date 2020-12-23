@@ -9,9 +9,9 @@ function wMatrix(γ, order; Δt=1.)
     return mW
 end
 
-function cholinv(M::AbstractMatrix)
-    return LinearAlgebra.inv(M)
-end
+# function cholinv(M::AbstractMatrix)
+#     return LinearAlgebra.inv(M)
+# end
 
 function mvdigamma(x, order)
     "Multivariate digamma function (see https://en.wikipedia.org/wiki/Multivariate_gamma_function)"

@@ -1,16 +1,16 @@
 # GFX
 
-Custom ForneyLab.jl factor node for generalised filtering with exogenous input.
+Composite ForneyLab.jl factor node for *G*eneralised *F*iltering with e*X*ogenous input.
 
 ### Usage
 
-The node can be added to ForneyLab by running 
+The node can be added to Julia as a development package via:
 
 ```julia
-] dev git@github.com:wmkouw/GFX.git
+] dev https://github.com/wmkouw/GFX.git
 ```
 
-in the REPL and then import
+Once added, it can be used in conjunction with ForneyLab by running:
 
 ```julia 
 using ForneyLab
