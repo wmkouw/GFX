@@ -34,18 +34,14 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 	s = zeros(order,); s[end] = -Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order, Δt=Δt)
+	Q = inv(mτ)*noisecov(Δt, dims=order)
 
-	# Compute expected values
-	EA = S + s*mθ'
-	EB = s*mη	
-
-	# Set parameters
-	ϕ = EA*mx + EB*mu
-	Φ = mW
+	# Compute transition matrices
+	A = S + s*mθ'
+	B = -s*mη	
 
 	# Set outgoing message
-	return Message(Multivariate, GaussianMeanPrecision, m=ϕ, w=Φ)
+	return Message(Multivariate, GaussianMeanVariance, m=A*mx + B*mu, v=Q)
 end
 
 function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
