@@ -31,17 +31,17 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
+	s = zeros(order,); s[end] = Δt
 
-	# Cast precision to matrix
-	Q = inv(mτ)*noisecov(Δt, dims=order)
+	# Generate covariance matrix
+	EVγ = inv(mτ)*noisecov(Δt, dims=order)
 
 	# Compute transition matrices
-	A = S + s*mθ'
-	B = -s*mη	
+	EAθ = S + s*mθ'
+	EBη = s*mη	
 
 	# Set outgoing message
-	return Message(Multivariate, GaussianMeanVariance, m=A*mx + B*mu, v=Q)
+	return Message(Multivariate, GaussianMeanVariance, m=EAθ*mx + EBη*mu, v=EVγ)
 end
 
 function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
@@ -59,24 +59,25 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
 	mu,Vu = unsafeMeanCov(marg_u)
 	mτ = unsafeMean(marg_τ)
 
-	# Set order
+	# Set order of system
 	order = dims(marg_x)
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
+	s = zeros(order,); s[end] = Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order, Δt=Δt)
-	
-	# Compute expected values
-	B = zeros(order,); B[end] = Δt
-	EB = B*mη	
+	EVγ = inv(mτ)*noisecov(Δt, dims=order)
+
+	# Compute transition matrix
+	EBη = s*mη
 
 	# Set parameters
-	ϕ = mx*s'*mW*(my - EB*mu) - (mx*mx' + Vx)*S'*mW*s
-	# Φ = mx*s'*mW*s*mx' + Vx*(s'*mW*s)
-	Φ = (s'*s)*mW*(mx*mx' + Vx)
+	ϕ = mx*s'*EVγ*(my - EBη*mu) - EVγ*S'*(mx*mx' + Vx)*s
+	# ϕ = mx*s'*EVγ*(my - EBη*mu) - (mx*mx' + Vx)*S'*EVγ*s
+
+	Φ = EVγ*(s'*(mx*mx' + Vx)*s)
+	# Φ = (s'*s)*EVγ*(mx*mx' + Vx)	
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -97,23 +98,24 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 	mu,Vu = unsafeMeanCov(marg_u)
 	mτ = unsafeMean(marg_τ)
 
-	# Set order
+	# Set order of system
 	order = dims(marg_θ)
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
+	s = zeros(order,); s[end] = Δt
 
 	# Cast precision to matrix
-	mW = wMatrix(mτ, order, Δt=Δt)
-	
-	# Compute expected values
+	mV = inv(mτ)*noisecov(Δt, dims=order)
+	mW = mτ*inv(noisecov(Δt, dims=order))
+
+	# Compute transition matrices
 	EA = S + s*mθ'
+	EB = s*mη
 
 	# Set parameters
-	ϕ = EA*mW*(my - s*mη*mu)
-	Φ = EA'*mW*EA + mW*Vθ
-	# Φ = mW*(EA'*EA + Vθ)
+	ϕ = EA'*mW*(my - EB*mu)
+	Φ = S'*mW*S + S'*mW*s*mθ' + mθ*s'*mW*S + s'*mW*s*(Vθ + mθ*mθ')
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -131,7 +133,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 	my = unsafeMean(marg_y)
 	mθ = unsafeMean(marg_θ)
 	mx = unsafeMean(marg_x)
-	mu,Vu = unsafeMeanCov(marg_u)
+	mu,vu = unsafeMeanCov(marg_u)
 	mτ = unsafeMean(marg_τ)
 
 	# Set order
@@ -139,7 +141,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 
 	# Define helper matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
+	s = zeros(order,); s[end] = Δt
 
 	# Compute expected values
 	EA = S + s*mθ'
@@ -149,7 +151,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 
 	# Set parameters
 	ϕ = mu'*s'*mW*(my - EA*mx)
-	Φ = mτ*(mu*mu' + Vu)
+	Φ = mτ*(mu*mu' + vu)
 
 	# Set outgoing message
 	return Message(Univariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)

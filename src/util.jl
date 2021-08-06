@@ -1,6 +1,13 @@
 "Utility functions"
 
+import LinearAlgebra: inv
+import ForneyLab: cholinv
 import SpecialFunctions: digamma
+export noisecov
+
+function cholinv(M::Matrix{Float64})
+    return LinearAlgebra.inv(M)
+end
 
 function mvdigamma(x, order)
     "Multivariate digamma function (see https://en.wikipedia.org/wiki/Multivariate_gamma_function)"
@@ -25,4 +32,3 @@ function noisecov(Δt; dims=2)
 
     return Q
 end
-θ

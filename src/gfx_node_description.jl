@@ -11,7 +11,7 @@ Description:
 
     A Gaussian node for transitions between states in generalised coordinates:
 
-    𝒩(y | A(θ)x + B(η)u, Q),
+    𝒩(y | A(θ)x + B(η)u, V(τ)),
 
     where for instance for an order-2 differential 
         
@@ -25,8 +25,8 @@ Description:
     with b = |  0 | ,
              | Δt |
     and
-        Q = τ^-1 *[Δt^3/3   Δt^2/2;
-                   Δt^2/2       Δt];
+        V(τ) = τ^-1 *[Δt^3/3   Δt^2/2;
+                      Δt^2/2       Δt];
 
     Interfaces:
         1. y (output vector)
@@ -37,7 +37,7 @@ Description:
         6. τ (precision)
 
     Construction:
-        GeneralisedFilterX(y, θ, x, η, u, τ, Δt=1., id=:some_id)
+        GeneralisedFilterX(y, θ, x, η, u, τ, Δt=1.0, id=:some_id)
 
 """
 
@@ -49,7 +49,7 @@ mutable struct GeneralisedFilterX <: SoftFactor
     # Sampling time
     Δt::Float64
 
-    function GeneralisedFilterX(y, θ, x, η, u, τ; Δt::Float64=1., id=generateId(GeneralisedFilterX))
+    function GeneralisedFilterX(y, θ, x, η, u, τ; Δt::Float64=1.0, id=generateId(GeneralisedFilterX))
         @ensureVariables(y, x, θ, η, u, τ)
         self = new(id, Array{Interface}(undef, 6), Dict{Symbol,Interface}(), Δt)
         addNode!(currentGraph(), self)
