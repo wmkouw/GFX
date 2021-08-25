@@ -33,15 +33,15 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
-	# Generate covariance matrix
-	EVγ = inv(mτ)*noisecov(Δt, dims=order)
+	# Generate precision matrix
+	EW = mτ*inv(noisecov(Δt, dims=order))
 
 	# Compute transition matrices
-	EAθ = S + s*mθ'
-	EBη = s*mη	
+	EA = S + s*mθ'
+	EB = s*mη
 
 	# Set outgoing message
-	return Message(Multivariate, GaussianMeanVariance, m=EAθ*mx + EBη*mu, v=EVγ)
+	return Message(Multivariate, GaussianMeanPrecision, m=EA*mx + EB*mu, w=EW)
 end
 
 function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
@@ -53,10 +53,10 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
                                      marg_τ :: ProbabilityDistribution{Univariate})
 
 	# Extract moments of beliefs
-	my,Vy = unsafeMeanCov(marg_y)
+	my = unsafeMean(marg_y)
 	mx,Vx = unsafeMeanCov(marg_x)
-	mη,Vη = unsafeMeanCov(marg_η)
-	mu,Vu = unsafeMeanCov(marg_u)
+	mη = unsafeMean(marg_η)
+	mu = unsafeMean(marg_u)
 	mτ = unsafeMean(marg_τ)
 
 	# Set order of system
@@ -66,18 +66,20 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
-	# Cast precision to matrix
-	EVγ = inv(mτ)*noisecov(Δt, dims=order)
+	# Generate precision matrix
+	EW = mτ*inv(noisecov(Δt, dims=order))
 
 	# Compute transition matrix
-	EBη = s*mη
+	EB = s*mη
 
 	# Set parameters
-	ϕ = mx*s'*EVγ*(my - EBη*mu) - EVγ*S'*(mx*mx' + Vx)*s
-	# ϕ = mx*s'*EVγ*(my - EBη*mu) - (mx*mx' + Vx)*S'*EVγ*s
+	# ϕ = mx*s'*EW*(my - EB*mu) - EW*S'*(mx*mx' + Vx)*s
+	# ϕ = mx*s'*EW*(my - EB*mu) - (mx*mx' + Vx)*S'*EW*s
+	ϕ = mx*s'*EW*(my - EB*mu) - (mx*s'*EW*S*mx + Vx*S'*EW*s)
 
-	Φ = EVγ*(s'*(mx*mx' + Vx)*s)
-	# Φ = (s'*s)*EVγ*(mx*mx' + Vx)	
+	# Φ = EW*(s'*(mx*mx' + Vx)*s)
+	# Φ = (s'*s)*EW*(mx*mx' + Vx)	
+	Φ = mx*s'*EW*s*mx' + Vx*(s'*EW*s)
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -92,10 +94,10 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
                                      marg_τ :: ProbabilityDistribution{Univariate})
 
    	# Extract moments of beliefs
-	my,Vy = unsafeMeanCov(marg_y)
+	my = unsafeMean(marg_y)
 	mθ,Vθ = unsafeMeanCov(marg_θ)
-	mη,Vη = unsafeMeanCov(marg_η)
-	mu,Vu = unsafeMeanCov(marg_u)
+	mη = unsafeMean(marg_η)
+	mu = unsafeMean(marg_u)
 	mτ = unsafeMean(marg_τ)
 
 	# Set order of system
@@ -105,17 +107,17 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
-	# Cast precision to matrix
-	mV = inv(mτ)*noisecov(Δt, dims=order)
-	mW = mτ*inv(noisecov(Δt, dims=order))
+	# Generate precision matrix
+	EW = mτ*inv(noisecov(Δt, dims=order))
 
 	# Compute transition matrices
 	EA = S + s*mθ'
 	EB = s*mη
 
 	# Set parameters
-	ϕ = EA'*mW*(my - EB*mu)
-	Φ = S'*mW*S + S'*mW*s*mθ' + mθ*s'*mW*S + s'*mW*s*(Vθ + mθ*mθ')
+	ϕ = EA'*EW*(my - EB*mu)
+	# Φ = S'*EW*S + S'*EW*s*mθ' + mθ*s'*EW*S + s'*EW*s*(Vθ + mθ*mθ')
+	Φ = EA'*EW*EA + (s'*EW*s)*Vθ
 
 	# Set outgoing message
 	return Message(Multivariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -133,7 +135,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 	my = unsafeMean(marg_y)
 	mθ = unsafeMean(marg_θ)
 	mx = unsafeMean(marg_x)
-	mu,vu = unsafeMeanCov(marg_u)
+	mu = unsafeMean(marg_u)
 	mτ = unsafeMean(marg_τ)
 
 	# Set order
@@ -146,12 +148,12 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 	# Compute expected values
 	EA = S + s*mθ'
 
-	# Cast precision to matrix
-	mW = wMatrix(mτ, order, Δt=Δt)
+	# Generate precision matrix
+	EW = mτ*inv(noisecov(Δt, dims=order))
 
 	# Set parameters
-	ϕ = mu'*s'*mW*(my - EA*mx)
-	Φ = mτ*(mu*mu' + vu)
+	ϕ = mu'*s'*EW*(my - EA*mx)
+	Φ = mu'*(s'*EW*s)*mu
 
 	# Set outgoing message
 	return Message(Univariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
@@ -165,33 +167,7 @@ function ruleVariationalGFXIn4PPPPNP(Δt :: Float64,
 								     marg_u :: Nothing,
                                      marg_τ :: ProbabilityDistribution{Univariate})
 
-   
-	# Extract moments of beliefs
-	my,Vy = unsafeMeanCov(marg_y)
-	mθ,Vθ = unsafeMeanCov(marg_θ)
-	mx,Vx = unsafeMeanCov(marg_x)
-	mη,Vη = unsafeMeanCov(marg_η)
-	mτ = unsafeMean(marg_τ)
-
-	# Set order
-	order = dims(marg_θ)
-
-	# Define helper matrices
-	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
-
-	# Cast precision to matrix
-	mW = wMatrix(mτ, order, Δt=Δt)
-	
-	# Compute expected values
-	EA = S + s*mθ'
-
-	# Set parameters
-	ϕ = mη'*s'*mW*(my - EA*mx)
-	Φ = mτ*(mη*mη' + Vη)
-
-	# Set outgoing message
-	return Message(Univariate, GaussianWeightedMeanPrecision, xi=ϕ, w=Φ)
+   error("The input u_k should always be clamped.")
 end
 
 function ruleVariationalGFXIn5PPPPPN(Δt :: Float64,

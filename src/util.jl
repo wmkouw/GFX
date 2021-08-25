@@ -26,9 +26,10 @@ function noisecov(Δt; dims=2)
     elseif dims == 2
         Q = [Δt^3/3   Δt^2/2;
              Δt^2/2       Δt]
-    else
-        error("Not implemented yet.")
+    elseif dims >= 3
+        G = [Δt^n /factorial(n) for n in dims:-1:1] 
+        g = [Δt^(2n) /factorial(n-1) for n in dims+1:-1:2]
+        Q = (G*G' + diagm(g))
     end
-
     return Q
 end
