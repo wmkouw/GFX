@@ -29,7 +29,7 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 	# Set order of system
 	order = dims(marg_θ)
 
-	# Define helper matrices
+	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
@@ -62,7 +62,7 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
 	# Set order of system
 	order = dims(marg_x)
 
-	# Define helper matrices
+	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
@@ -103,7 +103,7 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 	# Set order of system
 	order = dims(marg_θ)
 
-	# Define helper matrices
+	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
@@ -141,7 +141,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 	# Set order
 	order = dims(marg_θ)
 
-	# Define helper matrices
+	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
 	s = zeros(order,); s[end] = Δt
 
@@ -189,9 +189,9 @@ function ruleVariationalGFXIn5PPPPPN(Δt :: Float64,
 	# Set order
 	order = dims(marg_θ)
 
-	# Define helper matrices
+	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
-	s = zeros(order,); s[end] = -Δt
+	s = zeros(order,); s[end] = Δt
 	
 	# Compute expected values
 	EA = S + s*mθ'
