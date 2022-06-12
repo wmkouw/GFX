@@ -27,7 +27,7 @@ function ruleVariationalGFXOutNPPPPP(Δt :: Float64,
 	mτ = unsafeMean(marg_τ)
 
 	# Set order of system
-	order = dims(marg_θ)
+	order = dims(marg_θ)[1]
 
 	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
@@ -60,7 +60,7 @@ function ruleVariationalGFXIn1PNPPPP(Δt :: Float64,
 	mτ = unsafeMean(marg_τ)
 
 	# Set order of system
-	order = dims(marg_x)
+	order = dims(marg_x)[1]
 
 	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
@@ -101,7 +101,7 @@ function ruleVariationalGFXIn2PPNPPP(Δt :: Float64,
 	mτ = unsafeMean(marg_τ)
 
 	# Set order of system
-	order = dims(marg_θ)
+	order = dims(marg_θ)[1]
 
 	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
@@ -139,7 +139,7 @@ function ruleVariationalGFXIn3PPPNPP(Δt :: Float64,
 	mτ = unsafeMean(marg_τ)
 
 	# Set order
-	order = dims(marg_θ)
+	order = dims(marg_θ)[1]
 
 	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)
@@ -187,7 +187,7 @@ function ruleVariationalGFXIn5PPPPPN(Δt :: Float64,
 	mu,Vu = unsafeMeanCov(marg_u)
 	
 	# Set order
-	order = dims(marg_θ)
+	order = dims(marg_θ)[1]
 
 	# Structure matrices
 	S = Bidiagonal(ones(order,), Δt.*ones(order-1,), :U)

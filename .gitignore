@@ -23,5 +23,6 @@ docs/site/
 # environment.
 Manifest.toml
 
-# Ignore jupyter checkpoints
+# Ignore local backups
 .ipynb_checkpoints
+.vscode
